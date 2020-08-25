@@ -1,1 +1,130 @@
-;ladsfkajsd;lfka
+#include <Keypad.h>
+
+const emergencyKey = "***";
+const CODE = "1234";
+unsigned long startTime;  
+unsigned long currentTime;
+String inputPin;
+
+int buzzerPin = 5;  // the number of the buzzer pin
+int echoPin = 6;    // Echo Pin of Ultrasonic Sensor
+int pingPin = 7;    // Trigger Pin of Ultrasonic Sensor
+//int buttonPin = 12; // Initialize buttonPin to D12
+
+float sinVal;       // Define a variable to save sine value
+int toneVal;        // Define a variable to save sound frequency
+
+int stopper = 1;    // Used to swireOne/play sound
+
+// Keypad setup
+byte wireOne = A0;      // top most row on numbpad
+byte wireTwo = A1;      // top mid row on numbpad
+byte wireThree = A2;    // bottom middle row
+byte wireFour = A3;     //bottom most row ""
+byte wireFive = 8;      // left most column on numpad
+byte wireSix = 9;       //center left column on numpad
+byte wireSeven = 10;    //center right column on numbpad
+
+const byte ROWS = 4;
+const byte COLS = 3;
+char hexaKeys[ROWS][COLS] = {
+  {'1', '2', '3'},
+  {'4', '5', '6'},
+  {'7', '8', '9'},
+  {'*', '0', '#'}
+};
+
+byte rowPins[ROWS] = {wireOne, wireTwo, wireThree, wireFour};
+byte colPins[COLS] = {wireFive, wireSix, wireSeven};
+
+Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);         // Starting Serial Terminal
+  pinMode(buttonPin, INPUT);  // To turn off the alarm
+  pinMode(echoPin, INPUT);    // To receive the wave
+  pinMode(pingPin, OUTPUT);   // To send the wave
+  pinMode(buzzerPin, OUTPUT); // Set Buzzer pin to output mode
+
+}
+
+void loop() {
+  // This all checks the distance in cm:
+  float duration, cmDist;
+  digitalWrite(pingPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pingPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  cmDist = microsecondsToCentimeters(duration);
+  Serial.print(cmDist);
+  Serial.print("cm");
+  Serial.println();
+
+  if (fabs(cmDist - 15) > 5 ) {
+    ringAlarm();
+    startTime = millis();
+    authorize();
+  } else {
+    noTone(buzzerPin);
+  }
+}
+
+
+float microsecondsToCentimeters(long microseconds) {
+  return microseconds / 29.0 / 2.0;
+}
+
+void ringAlarm() {
+  for (int x = 0; x < 60000; x++) {   // X from 0 degree->60000 degree --- I'm assuming this makes it go longer
+    sinVal = sin(x * (PI / 180));   // Calculate the sine of x
+    toneVal = 2000 + sinVal * 500;  // Calculate sound frequency according to the sine of x
+    tone(buzzerPin, toneVal);       // Output sound frequency to buzzerPin
+    delay(1);
+  }
+}
+
+//sketch timer execution
+void authorize() {
+  int currTime = millis();
+  while (currTime - startTime < 60000) {
+    boolean check = checkPin(inputPin);
+    if (check) {
+      chill();
+    } else {
+      piezo();
+    }
+    currTime = millis();
+  }
+  piezo();
+}
+
+
+// checks the 4 digit pin, returns true if code is correct or the emergecy key
+// # is reset button
+// 
+boolean checkPin(String input) {
+  while (input.length() <= 4) {
+    if (input.equals(emergencyKey)) {
+      return true;
+      //or input = CODE;
+    }
+    char digit = customKeypad.getKey();
+    if (digit = '#') {
+      input = "";
+    } else {
+      input += digit;
+    }
+  }
+  return input.equals(CODE);
+}
+
+void piezo() {
+  ringAlarm();
+}
+
+void chill() {
+  noTone(buzzerPin);
+}
