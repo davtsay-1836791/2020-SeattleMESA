@@ -1,1 +1,60 @@
-yeet
+//Code prior to adding the keypad
+const emergencyKey = "***";
+
+int echoPin = 6;    // Echo Pin of Ultrasonic Sensor
+int pingPin = 7;    // Trigger Pin of Ultrasonic Sensor
+int buzzerPin = 9;  // the number of the buzzer pin
+int buttonPin = 12; // Initialize buttonPin to D12
+
+float sinVal;       // Define a variable to save sine value
+int toneVal;        // Define a variable to save sound frequency
+int stopper = 1;    // Used to stop/play sound
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);         // Starting Serial Terminal
+  pinMode(buttonPin, INPUT);  // To turn off the alarm
+  pinMode(echoPin, INPUT);    // To receive the wave
+  pinMode(pingPin, OUTPUT);   // To send the wave
+  pinMode(buzzerPin, OUTPUT); // Set Buzzer pin to output mode
+}
+
+void loop() {
+  // This all checks the distance in cm:
+  float duration, cmDist;
+  digitalWrite(pingPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pingPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  cmDist = microsecondsToCentimeters(duration);
+  Serial.print(cmDist);
+  Serial.print("cm");
+  Serial.println();
+  
+  if (fabs(cmDist - 15) > 5 ) {
+    ringAlarm();
+  } else {
+    noTone(buzzerPin);
+  }
+}
+
+
+float microsecondsToCentimeters(long microseconds) {
+  return microseconds / 29.0 / 2.0;
+}
+
+void ringAlarm() {
+  for (int x = 0; x < 360; x++) {   // X from 0 degree->360 degree
+    sinVal = sin(x * (PI / 180));   // Calculate the sine of x
+    toneVal = 2000 + sinVal * 500;  // Calculate sound frequency according to the sine of x
+    tone(buzzerPin, toneVal);       // Output sound frequency to buzzerPin
+    delay(1);
+    /*
+    if(digitalRead(buttonPin) == LOW) {
+      return 2;
+    }
+    */
+  }
+}
