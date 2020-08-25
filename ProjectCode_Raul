@@ -1,14 +1,40 @@
-//Code prior to adding the keypad
+//Alarm goes on if outside dist range until the pin is pressed!
+
+#include <Keypad.h>
+
 const emergencyKey = "***";
 
+int buzzerPin = 5;  // the number of the buzzer pin
 int echoPin = 6;    // Echo Pin of Ultrasonic Sensor
 int pingPin = 7;    // Trigger Pin of Ultrasonic Sensor
-int buzzerPin = 9;  // the number of the buzzer pin
-int buttonPin = 12; // Initialize buttonPin to D12
+//int buttonPin = 12; // Initialize buttonPin to D12
 
 float sinVal;       // Define a variable to save sine value
 int toneVal;        // Define a variable to save sound frequency
-int stopper = 1;    // Used to stop/play sound
+
+int stopper = 1;    // Used to swireOne/play sound
+
+// Keypad setup
+byte wireOne = A0;      // top most row on numbpad
+byte wireTwo = A1;      // top mid row on numbpad
+byte wireThree = A2;    // bottom middle row
+byte wireFour = A3;     //bottom most row ""
+byte wireFive = 8;      // left most column on numpad
+byte wireSix = 9;       //center left column on numpad
+byte wireSeven = 10;    //center right column on numbpad
+
+  const byte ROWS = 4;
+  const byte COLS = 3;
+  char hexaKeys[ROWS][COLS] = {
+    {'1','2','3'},
+    {'4','5','6'},
+    {'7','8','9'},
+    {'*','0','#'}};
+
+  byte rowPins[ROWS] = {wireOne, wireTwo, wireThree, wireFour};
+  byte colPins[COLS] = {wireFive, wireSix, wireSeven};
+  
+  Keypad customKeypad = Keypad(makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS);
 
 void setup() {
   // put your setup code here, to run once:
@@ -58,3 +84,4 @@ void ringAlarm() {
     */
   }
 }
+
